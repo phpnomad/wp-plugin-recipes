@@ -1,0 +1,151 @@
+{
+    "name": "wp-plugin",
+    "kind": "scaffolding",
+    "stability": "experimental",
+    "summary": "Bootstrap a brand-new PHPNomad WordPress plugin from a freshly created project directory.",
+    "description": "Scaffolds the entire structure of a PHPNomad WordPress plugin: entry file, Application class, root initializer, composer.json, tests, configuration. Run once after `composer create-project phpnomad/wp-plugin-starter`.",
+    "problem": "You want to start a new WordPress plugin built on PHPNomad and you do not want to clone a stale template, hand-edit placeholder names, or wire up DI bindings yourself. You want a working baseline you can extend with other recipes.",
+    "appliesWhen": [
+        "You are creating a brand-new WordPress plugin (not adding to an existing one)",
+        "You ran `composer create-project phpnomad/wp-plugin-starter <name>` and are inside that directory",
+        "You want the canonical PHPNomad-on-WordPress plugin structure",
+        "You will use phpnomad/cli to add functionality after this recipe completes"
+    ],
+    "avoidWhen": [
+        "You already have a working PHPNomad plugin and only want to add functionality (use other recipes instead)",
+        "You are integrating PHPNomad into an existing non-PHPNomad WordPress plugin (this overwrites composer.json)",
+        "You want a multi-segment PHP namespace right out of the box (this v1 supports single-segment only; edit composer.json after for multi-segment)"
+    ],
+    "synonyms": {
+        "general": ["bootstrap", "scaffold", "starter", "init"],
+        "wordpress": ["create wordpress plugin", "start a new plugin", "wp plugin scaffold", "blank plugin"],
+        "framework": ["create-project equivalent"]
+    },
+    "examples": [
+        "Start a new WordPress plugin called Acme Billing",
+        "Bootstrap a fresh PHPNomad plugin",
+        "I just ran composer create-project, set up the rest",
+        "Scaffold an empty WordPress plugin with PHPNomad"
+    ],
+    "tags": ["wordpress", "bootstrap", "scaffolding", "starter", "plugin"],
+    "tradeoffs": "Overwrites the starter's composer.json with one that reflects your plugin's identity. Run this only once, in a freshly created project. Multi-segment namespaces require a manual edit afterward.",
+    "relatedPatterns": [
+        {"recipe": "phpnomad/datastore", "relationship": "next-step-add-data-layer"},
+        {"recipe": "phpnomad/controller", "relationship": "next-step-add-rest-endpoint"},
+        {"recipe": "phpnomad/listener", "relationship": "next-step-react-to-events"}
+    ],
+    "outputs": [
+        "{{textDomain}}.php — WordPress plugin entry file with proper plugin header",
+        "lib/Application.php — PHPNomad Application class wired for WordPress",
+        "lib/AppInit.php — root initializer where future recipes register",
+        "composer.json — rewritten with your plugin's identity, deps, and PSR-4 autoload",
+        "phpunit.xml — PHPUnit configuration",
+        "tests/bootstrap.php — minimal PHPUnit bootstrap",
+        ".gitignore",
+        "README.md — your plugin's README",
+        ".phpnomad/config.json — recipe activation list, pre-seeded with the common recipes"
+    ],
+    "postApply": [
+        "Run `composer update` to pick up any new deps in the rewritten composer.json",
+        "Run `composer dump-autoload` so the new namespace mapping is active",
+        "Use `vendor/bin/phpnomad recipes:list` to see what other recipes are available",
+        "Add functionality with phpnomad/datastore, phpnomad/controller, phpnomad/listener, etc.",
+        "When ready, install in a WordPress site to verify the plugin activates"
+    ],
+    "vars": {
+        "pluginName": {
+            "type": "string",
+            "description": "Display name shown in the WordPress admin (e.g., 'My Plugin')",
+            "example": "Acme Billing",
+            "aiHint": "Title-case human-readable name. Shown in the WP plugins screen. Two to four words."
+        },
+        "description": {
+            "type": "string",
+            "description": "Short description for the WP plugin header and composer.json",
+            "example": "Subscription billing for the Acme service.",
+            "aiHint": "One sentence, ends with a period. Plain English, no marketing fluff."
+        },
+        "vendor": {
+            "type": "string",
+            "description": "Composer vendor name (lowercase, dash-separated)",
+            "example": "acme",
+            "aiHint": "lowercase, may contain dashes, no spaces. Often the company or developer's handle."
+        },
+        "package": {
+            "type": "string",
+            "description": "Composer package name (lowercase, dash-separated)",
+            "example": "billing",
+            "aiHint": "lowercase, dash-separated, no spaces. The plugin's slug."
+        },
+        "namespace": {
+            "type": "string",
+            "description": "Single-segment PHP namespace for the plugin's classes (PascalCase, no backslashes)",
+            "example": "AcmeBilling",
+            "aiHint": "Single segment, PascalCase, no backslashes. Combine vendor and package into one segment (AcmeBilling, MyPlugin). Multi-segment namespaces are not supported in v1 of this recipe."
+        },
+        "textDomain": {
+            "type": "string",
+            "description": "WordPress text domain for i18n (lowercase, dash-separated). Also becomes the entry filename.",
+            "example": "acme-billing",
+            "aiHint": "lowercase, dash-separated. Convention is to match the package name."
+        },
+        "authorName": {
+            "type": "string",
+            "description": "Author name shown in the WP plugin header and composer.json",
+            "example": "Alex Standiford",
+            "aiHint": "Person or organization name."
+        },
+        "authorEmail": {
+            "type": "string",
+            "description": "Author email for composer.json",
+            "example": "alex@example.com",
+            "aiHint": "Valid email address. Used in composer.json author block."
+        },
+        "authorUrl": {
+            "type": "string",
+            "description": "Author website URL for the WP plugin header (optional, leave empty for none)",
+            "example": "https://example.com",
+            "aiHint": "Optional. Pass an empty string if not applicable."
+        }
+    },
+    "requires": [],
+    "files": [
+        {
+            "path": "{{textDomain}}.php",
+            "template": "wp-plugin-entry"
+        },
+        {
+            "path": "lib/Application.php",
+            "template": "wp-plugin-application"
+        },
+        {
+            "path": "lib/AppInit.php",
+            "template": "wp-plugin-app-init"
+        },
+        {
+            "path": "composer.json",
+            "template": "wp-plugin-composer.json"
+        },
+        {
+            "path": "phpunit.xml",
+            "template": "wp-plugin-phpunit.xml"
+        },
+        {
+            "path": "tests/bootstrap.php",
+            "template": "wp-plugin-tests-bootstrap"
+        },
+        {
+            "path": ".gitignore",
+            "template": "wp-plugin-gitignore"
+        },
+        {
+            "path": "README.md",
+            "template": "wp-plugin-readme.md"
+        },
+        {
+            "path": ".phpnomad/config.json",
+            "template": "wp-plugin-config.json"
+        }
+    ],
+    "registrations": []
+}

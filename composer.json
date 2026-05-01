@@ -1,0 +1,21 @@
+{
+    "name": "phpnomad/wp-plugin-recipes",
+    "description": "Scaffolding recipes for PHPNomad WordPress plugins. Speaks WordPress vocabulary and produces idiomatic PHPNomad structure. Consumed by phpnomad/cli via composer-based kit discovery.",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Alex Standiford",
+            "email": "alex@standiford.us"
+        }
+    ],
+    "require": {
+        "phpnomad/core-recipes": "^1.0"
+    },
+    "extra": {
+        "phpnomad": {
+            "recipes": "recipes/",
+            "templates": "templates/"
+        }
+    }
+}
