@@ -20,11 +20,46 @@ composer require phpnomad/wp-plugin-recipes --dev
 
 ## Recipes provided
 
+### Bootstrap
+
 | Recipe | Purpose |
 |---|---|
 | `phpnomad/wp-plugin` | Bootstrap a brand-new WordPress plugin: entry file, Application class, root initializer, composer.json, tests, configuration |
 
-More recipes will land here as the WordPress vocabulary kit grows: custom post types, taxonomies, options pages, REST endpoints, admin screens.
+### Storage trilogies
+
+Each WordPress storage primitive comes in three variants — register only, handler-against-existing-datastore, and full-stack composite — mirroring the elevator pattern from `phpnomad/database-datastore` in core-recipes.
+
+| Just register | Handler against existing datastore | Full-stack composite |
+|---|---|---|
+| `phpnomad/cpt` | `phpnomad/cpt-handler` | `phpnomad/cpt-datastore` |
+| `phpnomad/taxonomy` | `phpnomad/taxonomy-handler` | `phpnomad/taxonomy-datastore` |
+| `phpnomad/option` | `phpnomad/option-provider` | `phpnomad/setting` |
+| `phpnomad/meta` | `phpnomad/meta-provider` | `phpnomad/attribute` |
+
+CPT and taxonomy recipes implement all four datastore handler interfaces (`Datastore`, `DatastoreHasPrimaryKey`, `DatastoreHasWhere`, `DatastoreHasCounts`) using WordPress core APIs. Option and meta recipes are simpler — the "handler" tier is a typed accessor service rather than a full CRUD adapter.
+
+### Auth and admin surfaces
+
+| Recipe | Purpose |
+|---|---|
+| `phpnomad/role` | Add a WordPress user role on Ready (idempotent) |
+| `phpnomad/admin-page` | Top-level wp-admin menu page with capability gating |
+| `phpnomad/admin-notice` | Banner-style admin notice with conditional render |
+| `phpnomad/admin-bar-item` | Quick-access node in the WordPress admin bar |
+| `phpnomad/shortcode` | Register a `[shortcode]` tag with a render handler |
+
+### Scheduling and assets
+
+| Recipe | Purpose |
+|---|---|
+| `phpnomad/cron-job` | Schedule and handle a recurring WP-Cron job |
+| `phpnomad/scripts-bundle` | Enqueue a JS bundle (front-end and/or admin), reads `.asset.php` for deps |
+| `phpnomad/styles-bundle` | Enqueue a CSS bundle (front-end and/or admin) |
+
+All registration recipes scaffold a class implementing `CanHandle` that responds to PHPNomad's `Ready` event, mapped into the initializer's `getListeners()`. Composites pass vars through to child recipes.
+
+Run `vendor/bin/phpnomad recipes:list --all=1` inside a project to see the full list with summaries.
 
 ## Bootstrap workflow
 

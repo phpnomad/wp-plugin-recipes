@@ -103,9 +103,9 @@
         },
         "authorUrl": {
             "type": "string",
-            "description": "Author website URL for the WP plugin header (optional, leave empty for none)",
+            "description": "Author website URL for the WP plugin header. Pass an empty string to omit the Author URI line.",
             "example": "https://example.com",
-            "aiHint": "Optional. Pass an empty string if not applicable."
+            "aiHint": "If you don't have a website, pass an empty string. The validator requires every var to be present, so empty string is the way to opt out."
         }
     },
     "requires": [],
