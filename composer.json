@@ -13,6 +13,9 @@
         "phpnomad/core-recipes": "^1.0"
     },
     "extra": {
+        "branch-alias": {
+            "dev-main": "1.x-dev"
+        },
         "phpnomad": {
             "recipes": "recipes/",
             "templates": "templates/"

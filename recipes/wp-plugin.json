@@ -124,11 +124,12 @@
         },
         {
             "path": "composer.json",
-            "template": "wp-plugin-composer.json"
+            "template": "wp-plugin-composer.json.tpl",
+            "overwrite": true
         },
         {
             "path": "phpunit.xml",
-            "template": "wp-plugin-phpunit.xml"
+            "template": "wp-plugin-phpunit.xml.tpl"
         },
         {
             "path": "tests/bootstrap.php",
@@ -136,15 +137,17 @@
         },
         {
             "path": ".gitignore",
-            "template": "wp-plugin-gitignore"
+            "template": "wp-plugin-gitignore.tpl",
+            "overwrite": true
         },
         {
             "path": "README.md",
-            "template": "wp-plugin-readme.md"
+            "template": "wp-plugin-readme.md.tpl",
+            "overwrite": true
         },
         {
             "path": ".phpnomad/config.json",
-            "template": "wp-plugin-config.json"
+            "template": "wp-plugin-config.json.tpl"
         }
     ],
     "registrations": []
