@@ -24,17 +24,10 @@ class {{name}} implements CanHandle
             'description' => __('{{description}}', '{{textDomain}}'),
             'single' => true,
             'show_in_rest' => true,
-            'default' => $this->defaultValue(),
+            // Add 'default' => ... if needed. Must match metaType:
+            //   string => '', boolean => false, integer => 0, number => 0,
+            //   array => [], object => (object) [].
             // TODO: customize sanitize_callback and auth_callback as needed.
         ]);
-    }
-
-    /**
-     * @return mixed
-     */
-    private function defaultValue(): mixed
-    {
-        // TODO: replace with the actual default for this meta key.
-        return null;
     }
 }

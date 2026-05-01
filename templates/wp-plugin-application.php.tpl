@@ -4,7 +4,7 @@ namespace {{namespace}};
 
 use PHPNomad\Cache\Traits\WithInstanceCache;
 use PHPNomad\Core\Bootstrap\CoreInitializer as PHPNomadCoreInitializer;
-use PHPNomad\Di\Container;
+use PHPNomad\Di\Container\Container;
 use PHPNomad\Integrations\WordPress\Strategies\WordPressInitializer;
 use PHPNomad\Loader\Bootstrapper;
 use PHPNomad\Loader\Exceptions\LoaderException;

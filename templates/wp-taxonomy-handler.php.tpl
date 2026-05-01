@@ -4,7 +4,7 @@ namespace {{namespace}};
 
 use {{handlerInterface}};
 use {{modelAdapter}};
-use PHPNomad\Datamodel\Interfaces\DataModel;
+use PHPNomad\Datastore\Interfaces\DataModel;
 use PHPNomad\Datastore\Exceptions\DatastoreErrorException;
 use PHPNomad\Datastore\Exceptions\DuplicateEntryException;
 use PHPNomad\Datastore\Exceptions\RecordNotFoundException;
@@ -162,7 +162,7 @@ class {{className}} implements {{handlerInterfaceShort}}
     public function deleteWhere(array $conditions): void
     {
         foreach ($this->andWhere($conditions) as $model) {
-            $this->delete($model->id);
+            $this->delete($model->getId());
         }
     }
 

@@ -13,11 +13,11 @@
     "prefer-stable": true,
     "require": {
         "php": "^8.2",
-        "phpnomad/core": "^1.0",
+        "phpnomad/core": "^3.0",
         "phpnomad/wordpress-integration": "^4.0"
     },
     "require-dev": {
-        "phpnomad/cli": "^1.0",
+        "phpnomad/cli": "^2.0",
         "phpnomad/core-recipes": "^1.0",
         "phpnomad/wp-plugin-recipes": "^1.0",
         "phpunit/phpunit": "^10.0 || ^11.0"
