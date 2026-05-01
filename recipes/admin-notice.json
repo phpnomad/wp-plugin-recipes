@@ -1,0 +1,84 @@
+{
+    "name": "admin-notice",
+    "kind": "scaffolding",
+    "stability": "experimental",
+    "summary": "Render an admin notice in wp-admin via a Ready event listener.",
+    "description": "Scaffolds a Ready listener that hooks admin_notices and renders a styled notice. Includes a shouldRender() gate for conditional display.",
+    "problem": "You need to surface a one-time message in wp-admin (setup required, action needed, error encountered) without sprinkling admin_notices hooks throughout the codebase.",
+    "appliesWhen": [
+        "You want a banner-style message at the top of wp-admin pages",
+        "Display is conditional on environment, capability, or stored state",
+        "The notice can be expressed as static HTML"
+    ],
+    "avoidWhen": [
+        "You need an inline notice tied to a specific form's submission (use settings_errors instead)",
+        "The notice must persist as a long-running task indicator (build a custom UI inside an admin page)"
+    ],
+    "synonyms": {
+        "general": ["banner", "alert", "flash message"],
+        "wordpress": ["admin notice", "admin_notices"]
+    },
+    "examples": [
+        "Show a 'configure the plugin' notice when settings are missing",
+        "Display an upgrade-required notice"
+    ],
+    "tags": ["wordpress", "admin", "ui", "notice"],
+    "tradeoffs": "Renders on every admin page until shouldRender() returns false. For per-user dismissal, store a user_meta flag and check it in shouldRender().",
+    "relatedPatterns": [
+        {"recipe": "phpnomad/admin-page", "relationship": "often-paired"}
+    ],
+    "outputs": [
+        "A {name} class implementing CanHandle that hooks admin_notices",
+        "A getListeners() entry mapping Ready to {name}"
+    ],
+    "postApply": [
+        "Edit shouldRender() to gate display correctly",
+        "Refine the notice HTML — add buttons, links, or richer layout as needed"
+    ],
+    "vars": {
+        "name": {
+            "type": "string",
+            "description": "Class name (PascalCase)",
+            "example": "SetupRequiredNotice",
+            "aiHint": "PascalCase. Suffix with Notice."
+        },
+        "noticeType": {
+            "type": "string",
+            "description": "Notice severity",
+            "example": "warning",
+            "aiHint": "One of: success, info, warning, error."
+        },
+        "message": {
+            "type": "string",
+            "description": "Default message text (translatable)",
+            "example": "Acme Billing needs to be configured before it can run."
+        },
+        "textDomain": {
+            "type": "string",
+            "description": "Plugin text domain",
+            "example": "acme-billing"
+        },
+        "initializer": {
+            "type": "string",
+            "description": "FQCN of the initializer",
+            "example": "AcmeBilling\\AppInit"
+        }
+    },
+    "requires": [],
+    "files": [
+        {
+            "path": "lib/Admin/{{name}}.php",
+            "template": "wp-admin-notice"
+        }
+    ],
+    "registrations": [
+        {
+            "initializer": "{{initializer}}",
+            "method": "getListeners",
+            "interface": "PHPNomad\\Events\\Interfaces\\HasListeners",
+            "type": "map",
+            "key": "PHPNomad\\Core\\Events\\Ready",
+            "value": "{{namespace}}\\{{name}}"
+        }
+    ]
+}

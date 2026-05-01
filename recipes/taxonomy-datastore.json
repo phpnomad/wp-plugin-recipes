@@ -1,0 +1,125 @@
+{
+    "name": "taxonomy-datastore",
+    "kind": "composite",
+    "stability": "experimental",
+    "summary": "Full taxonomy-backed entity stack: model, adapter, datastore, registrar, and term-backed handler in one shot.",
+    "description": "Creates a complete WordPress-backed datastore stack for a taxonomy: model, model adapter, datastore (interface + handler interface + implementation), the taxonomy registrar, and a term-backed handler that translates the typed datastore into wp_insert_term / WP_Term_Query / wp_update_term / wp_delete_term calls.",
+    "problem": "You're starting a new entity that lives as WordPress terms and you want the entire idiomatic PHPNomad stack scaffolded in one shot, without copying boilerplate from another plugin.",
+    "appliesWhen": [
+        "You're starting a new entity that will live in WordPress as a custom taxonomy",
+        "You want the conventional PHPNomad data layer end-to-end with no gaps",
+        "Consumers should access the entity through a typed datastore, not get_terms directly",
+        "The data is term-shaped (classification, hierarchy, named labels)"
+    ],
+    "avoidWhen": [
+        "You only need the taxonomy registered — use phpnomad/taxonomy",
+        "You already have a datastore — use phpnomad/taxonomy-handler",
+        "The data is genuinely relational — use phpnomad/database-datastore"
+    ],
+    "synonyms": {
+        "general": ["full data layer for a taxonomy", "taxonomy entity scaffold"],
+        "wordpress": ["taxonomy with datastore", "term-backed entity"]
+    },
+    "examples": [
+        "Set up everything for a regions taxonomy with typed CRUD",
+        "Scaffold a full data layer for topics backed by terms"
+    ],
+    "tags": ["wordpress", "taxonomy", "data", "crud", "composite"],
+    "tradeoffs": "Generates seven files plus DI bindings and a Ready listener. Term meta_query is convenient but slow at scale. Use phpnomad/database-datastore if performance matters.",
+    "relatedPatterns": [
+        {"recipe": "phpnomad/model", "relationship": "child-recipe"},
+        {"recipe": "phpnomad/model-adapter", "relationship": "child-recipe"},
+        {"recipe": "phpnomad/datastore", "relationship": "child-recipe"},
+        {"recipe": "phpnomad/taxonomy-handler", "relationship": "child-recipe"},
+        {"recipe": "phpnomad/cpt-datastore", "relationship": "post-shaped-counterpart"}
+    ],
+    "outputs": [
+        "A {name} model class",
+        "A {name}Adapter model adapter",
+        "A {name} taxonomy registrar at lib/Taxonomies/{name}.php",
+        "A {name}Datastore class plus its public and handler interfaces",
+        "A {name}TaxonomyDatastoreHandler implementing the handler interface against WordPress",
+        "DI bindings tying it all together plus a Ready listener for the registrar"
+    ],
+    "postApply": [
+        "Define properties on the {name} model",
+        "Implement the adapter's toModel/toArray translations",
+        "Customize TERM_FIELDS in the handler",
+        "Customize register_taxonomy() args",
+        "Smoke test reads and writes through the datastore"
+    ],
+    "vars": {
+        "name": {
+            "type": "string",
+            "description": "Entity name (PascalCase, no suffix)",
+            "example": "Region"
+        },
+        "taxonomy": {
+            "type": "string",
+            "description": "WordPress taxonomy slug",
+            "example": "acme-region"
+        },
+        "objectType": {
+            "type": "string",
+            "description": "Post type slug this taxonomy attaches to",
+            "example": "acme-event"
+        },
+        "pluralLabel": {
+            "type": "string",
+            "description": "Plural display name",
+            "example": "Regions"
+        },
+        "singularLabel": {
+            "type": "string",
+            "description": "Singular display name",
+            "example": "Region"
+        },
+        "textDomain": {
+            "type": "string",
+            "description": "Plugin text domain",
+            "example": "acme-billing"
+        },
+        "initializer": {
+            "type": "string",
+            "description": "FQCN of the initializer",
+            "example": "AcmeBilling\\AppInit"
+        }
+    },
+    "requires": [],
+    "files": [],
+    "registrations": [],
+    "recipes": [
+        {
+            "recipe": "phpnomad/model",
+            "vars": {"name": "{{name}}"}
+        },
+        {
+            "recipe": "phpnomad/model-adapter",
+            "vars": {
+                "name": "{{name}}Adapter",
+                "model": "{{rootNamespace}}\\Models\\{{name}}"
+            }
+        },
+        {
+            "recipe": "phpnomad/datastore",
+            "vars": {
+                "name": "{{name}}",
+                "initializer": "{{initializer}}"
+            }
+        },
+        {
+            "recipe": "phpnomad/taxonomy-handler",
+            "vars": {
+                "name": "{{name}}",
+                "taxonomy": "{{taxonomy}}",
+                "objectType": "{{objectType}}",
+                "pluralLabel": "{{pluralLabel}}",
+                "singularLabel": "{{singularLabel}}",
+                "textDomain": "{{textDomain}}",
+                "handlerInterface": "{{rootNamespace}}\\Datastores\\{{name}}\\Interfaces\\{{name}}DatastoreHandler",
+                "modelAdapter": "{{rootNamespace}}\\Models\\Adapters\\{{name}}Adapter",
+                "initializer": "{{initializer}}"
+            }
+        }
+    ]
+}

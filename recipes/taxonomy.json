@@ -1,0 +1,105 @@
+{
+    "name": "taxonomy",
+    "kind": "scaffolding",
+    "stability": "experimental",
+    "summary": "Register a WordPress taxonomy via a Ready event listener.",
+    "description": "Scaffolds a class that registers a custom taxonomy when the PHPNomad Ready event fires (which dispatches on WordPress's init hook). Use this when the taxonomy belongs to WordPress and other code interacts with it via get_terms, wp_get_object_terms, etc., without going through a PHPNomad datastore.",
+    "problem": "You need a custom taxonomy attached to a post type, and other code (yours or third-party) will interact with it through standard WordPress APIs rather than a typed PHPNomad datastore.",
+    "appliesWhen": [
+        "You want a custom taxonomy registered with WordPress",
+        "Consumers will use get_terms, wp_get_object_terms, or the REST API directly",
+        "You do not need typed CRUD against terms",
+        "The data is content-classification shaped (categories, tags, regions)"
+    ],
+    "avoidWhen": [
+        "You want typed CRUD via a PHPNomad datastore (use phpnomad/taxonomy-datastore for the full stack, or phpnomad/taxonomy-handler if a datastore exists)",
+        "The data is not term-shaped (use phpnomad/database-datastore or phpnomad/cpt-datastore)"
+    ],
+    "synonyms": {
+        "general": ["taxonomy", "term collection", "classification"],
+        "wordpress": ["taxonomy", "register_taxonomy", "category", "tag"],
+        "drupal": ["vocabulary"]
+    },
+    "examples": [
+        "Register a regions taxonomy for the events post type",
+        "Add a difficulty taxonomy for recipes",
+        "I need a topics taxonomy for articles"
+    ],
+    "tags": ["wordpress", "taxonomy", "content"],
+    "tradeoffs": "Produces one class plus a listener registration. The taxonomy lives at the WordPress level only; consumers must use get_terms and friends.",
+    "relatedPatterns": [
+        {"recipe": "phpnomad/taxonomy-handler", "relationship": "elevator-up-add-typed-handler"},
+        {"recipe": "phpnomad/taxonomy-datastore", "relationship": "full-stack-composite"},
+        {"recipe": "phpnomad/cpt", "relationship": "often-paired"},
+        {"recipe": "phpnomad/listener", "relationship": "general-form-of-this-pattern"}
+    ],
+    "outputs": [
+        "A {name} class implementing CanHandle that registers the taxonomy on Ready",
+        "A getListeners() entry in the initializer mapping Ready to {name}"
+    ],
+    "postApply": [
+        "Customize register_taxonomy() args (hierarchy, capabilities, rewrite, default_term, etc.)",
+        "Run `wp taxonomy list` (WP-CLI) to confirm registration"
+    ],
+    "vars": {
+        "name": {
+            "type": "string",
+            "description": "Class name for the registrar (PascalCase, no suffix)",
+            "example": "Region",
+            "aiHint": "Singular PascalCase. Convention: name the registrar after the term concept (Region, not RegisterRegion or RegionTaxonomy)."
+        },
+        "taxonomy": {
+            "type": "string",
+            "description": "WordPress taxonomy slug (lowercase, dash-separated, max 32 chars)",
+            "example": "acme-region",
+            "aiHint": "lowercase with optional dashes. Should be plugin-prefixed to avoid collisions. Max 32 chars per WordPress."
+        },
+        "objectType": {
+            "type": "string",
+            "description": "Post type slug this taxonomy attaches to",
+            "example": "acme-event",
+            "aiHint": "Use the post type the taxonomy classifies. For multiple post types, edit the generated array after scaffolding."
+        },
+        "pluralLabel": {
+            "type": "string",
+            "description": "Plural display name shown in admin UI",
+            "example": "Regions",
+            "aiHint": "Title-case plural noun."
+        },
+        "singularLabel": {
+            "type": "string",
+            "description": "Singular display name shown in admin UI",
+            "example": "Region",
+            "aiHint": "Title-case singular noun."
+        },
+        "textDomain": {
+            "type": "string",
+            "description": "Plugin text domain for label translations",
+            "example": "acme-billing",
+            "aiHint": "Match the plugin's text domain."
+        },
+        "initializer": {
+            "type": "string",
+            "description": "FQCN of the initializer to register the listener in",
+            "example": "AcmeBilling\\AppInit",
+            "aiHint": "For a plugin scaffolded via phpnomad/wp-plugin, use {namespace}\\AppInit."
+        }
+    },
+    "requires": [],
+    "files": [
+        {
+            "path": "lib/Taxonomies/{{name}}.php",
+            "template": "wp-taxonomy-registrar"
+        }
+    ],
+    "registrations": [
+        {
+            "initializer": "{{initializer}}",
+            "method": "getListeners",
+            "interface": "PHPNomad\\Events\\Interfaces\\HasListeners",
+            "type": "map",
+            "key": "PHPNomad\\Core\\Events\\Ready",
+            "value": "{{namespace}}\\{{name}}"
+        }
+    ]
+}

@@ -1,0 +1,83 @@
+{
+    "name": "styles-bundle",
+    "kind": "scaffolding",
+    "stability": "experimental",
+    "summary": "Enqueue a CSS bundle on front-end and/or admin via a Ready event listener.",
+    "description": "Scaffolds a Ready listener that hooks both wp_enqueue_scripts and admin_enqueue_scripts to enqueue a stylesheet.",
+    "problem": "You have a built CSS bundle that needs to be enqueued in WordPress and you want a single, lifecycle-managed class doing it.",
+    "appliesWhen": [
+        "You ship a built CSS bundle",
+        "You want consistent enqueueing across front-end and admin"
+    ],
+    "avoidWhen": [
+        "The styles are inline (use wp_add_inline_style directly)",
+        "The styles ride along with a JS bundle that already imports them"
+    ],
+    "synonyms": {
+        "general": ["CSS bundle", "stylesheet"],
+        "wordpress": ["style enqueue", "wp_enqueue_style"]
+    },
+    "examples": [
+        "Enqueue the admin styles",
+        "Load the front-end widget CSS"
+    ],
+    "tags": ["wordpress", "assets", "css"],
+    "tradeoffs": "One class plus a listener registration. Hardcoded version string by default — replace with file-mtime or a build-time constant for cache busting.",
+    "relatedPatterns": [
+        {"recipe": "phpnomad/scripts-bundle", "relationship": "often-paired"}
+    ],
+    "outputs": [
+        "A {name} class implementing CanHandle that hooks wp_enqueue_scripts and admin_enqueue_scripts",
+        "A getListeners() entry mapping Ready to {name}"
+    ],
+    "postApply": [
+        "Edit shouldEnqueue() to scope where the stylesheet loads",
+        "Wire pluginUrl via DI",
+        "Replace the hardcoded version with a file-mtime or build constant"
+    ],
+    "vars": {
+        "name": {
+            "type": "string",
+            "description": "Class name (PascalCase)",
+            "example": "AdminStyles"
+        },
+        "handle": {
+            "type": "string",
+            "description": "Style handle (used by wp_enqueue_style)",
+            "example": "acme-admin",
+            "aiHint": "lowercase, dash-separated, plugin-prefixed."
+        },
+        "srcPath": {
+            "type": "string",
+            "description": "Path to the CSS bundle relative to plugin root",
+            "example": "build/admin.css"
+        },
+        "version": {
+            "type": "string",
+            "description": "Cache-busting version",
+            "example": "1.0.0"
+        },
+        "initializer": {
+            "type": "string",
+            "description": "FQCN of the initializer",
+            "example": "AcmeBilling\\AppInit"
+        }
+    },
+    "requires": [],
+    "files": [
+        {
+            "path": "lib/Assets/{{name}}.php",
+            "template": "wp-styles-bundle"
+        }
+    ],
+    "registrations": [
+        {
+            "initializer": "{{initializer}}",
+            "method": "getListeners",
+            "interface": "PHPNomad\\Events\\Interfaces\\HasListeners",
+            "type": "map",
+            "key": "PHPNomad\\Core\\Events\\Ready",
+            "value": "{{namespace}}\\{{name}}"
+        }
+    ]
+}

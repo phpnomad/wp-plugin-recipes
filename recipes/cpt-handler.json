@@ -1,0 +1,133 @@
+{
+    "name": "cpt-handler",
+    "kind": "scaffolding",
+    "stability": "experimental",
+    "summary": "WordPress-CPT-backed implementation of a datastore handler, plus a registrar for the post type itself.",
+    "description": "Creates a datastore handler that translates a typed PHPNomad datastore interface into WordPress CRUD (wp_insert_post, get_post, WP_Query, wp_update_post, wp_delete_post). Composes phpnomad/cpt so the post type is registered alongside the handler.",
+    "problem": "You already have a PHPNomad datastore (and its handler interface) and you want WordPress to be the actual backing storage — posts hold the records, post meta holds the extra fields — without writing the WP_Query/post-meta plumbing by hand.",
+    "appliesWhen": [
+        "You already have a datastore (phpnomad/datastore) needing a backing implementation",
+        "The data is post-shaped enough that WordPress posts + post meta is a sensible store",
+        "Consumers should still go through the typed datastore (not WP_Query directly)",
+        "You want the CPT registered as part of this scaffold, not separately"
+    ],
+    "avoidWhen": [
+        "You don't have a datastore yet (use phpnomad/cpt-datastore for the full bundle)",
+        "The data is genuinely relational and not post-shaped (use phpnomad/database-handler against a custom table)",
+        "You want WordPress code to interact via WP_Query directly with no datastore (use phpnomad/cpt alone)",
+        "The CPT is already registered elsewhere and you only want the handler — scaffold the handler by hand or fork this recipe"
+    ],
+    "synonyms": {
+        "general": ["CPT-backed handler", "post-type repository", "WordPress-backed datastore handler"],
+        "wordpress": ["CPT handler", "post-type-backed handler", "wpdb-via-WP_Query handler"]
+    },
+    "examples": [
+        "Back the OrderDatastore with the acme-order CPT",
+        "Wire the existing PortfolioDatastore to a portfolio post type",
+        "Implement EventDatastoreHandler against a WordPress events CPT"
+    ],
+    "tags": ["wordpress", "cpt", "data", "persistence"],
+    "tradeoffs": "The scaffolded handler implements all four datastore interfaces (Datastore, DatastoreHasPrimaryKey, DatastoreHasWhere, DatastoreHasCounts) using WordPress core APIs. There is no abstract base — the generated class is the implementation. Where/findBy clauses translate to WP_Query meta_query, which is workable but slow for large catalogs. Use phpnomad/database-datastore if you need real query performance.",
+    "relatedPatterns": [
+        {"recipe": "phpnomad/datastore", "relationship": "interface-this-implements"},
+        {"recipe": "phpnomad/cpt", "relationship": "child-recipe"},
+        {"recipe": "phpnomad/cpt-datastore", "relationship": "composite-that-includes-this"},
+        {"recipe": "phpnomad/database-handler", "relationship": "alternative-storage-backend"}
+    ],
+    "outputs": [
+        "A {name} registrar class at lib/PostTypes/{name}.php (via child recipe phpnomad/cpt)",
+        "A {name}CptDatastoreHandler class at lib/Datastores/{name}/{name}CptDatastoreHandler.php implementing the handler interface against WordPress",
+        "A getListeners() entry registering the registrar on the Ready event",
+        "A DI binding mapping the handler implementation to the handler interface"
+    ],
+    "postApply": [
+        "Edit register_post_type() args in the generated registrar (labels, capabilities, supports, taxonomies, etc.)",
+        "Customize the field map in the generated handler — decide which model fields are post fields (post_title, post_content, post_status) vs post meta",
+        "Fill in the model adapter's toArray/toModel translations to match the field map",
+        "Smoke test create/find/update/delete through the datastore",
+        "Consider replacing where()/findBy() with custom WP_Query logic if performance matters"
+    ],
+    "vars": {
+        "name": {
+            "type": "string",
+            "description": "Entity name shared across the registrar, the handler, and related datastore (PascalCase, no suffix)",
+            "example": "Order",
+            "aiHint": "Singular PascalCase. Same name as the datastore/model/adapter. Convention: name the registrar after the entity (Order, not OrderPostType)."
+        },
+        "postType": {
+            "type": "string",
+            "description": "WordPress post type slug (lowercase, dash-separated, max 20 chars)",
+            "example": "acme-order",
+            "aiHint": "lowercase with optional dashes. Should be prefixed by the plugin slug to avoid collisions (e.g. acme-order, not order). Max 20 chars per WordPress."
+        },
+        "pluralLabel": {
+            "type": "string",
+            "description": "Plural display name shown in admin UI",
+            "example": "Orders",
+            "aiHint": "Title-case plural noun."
+        },
+        "singularLabel": {
+            "type": "string",
+            "description": "Singular display name shown in admin UI",
+            "example": "Order",
+            "aiHint": "Title-case singular noun."
+        },
+        "textDomain": {
+            "type": "string",
+            "description": "Plugin text domain for label translations",
+            "example": "acme-billing",
+            "aiHint": "Match the plugin's text domain."
+        },
+        "handlerInterface": {
+            "type": "string",
+            "description": "FQCN of the datastore handler interface this class will implement",
+            "example": "AcmeBilling\\Datastores\\Order\\Interfaces\\OrderDatastoreHandler",
+            "aiHint": "Use the handler interface produced by phpnomad/datastore. Convention: {namespace}\\Datastores\\{name}\\Interfaces\\{name}DatastoreHandler."
+        },
+        "modelAdapter": {
+            "type": "string",
+            "description": "FQCN of the model adapter class",
+            "example": "AcmeBilling\\Models\\Adapters\\OrderAdapter",
+            "aiHint": "Use the adapter class created by phpnomad/model-adapter. Convention: {namespace}\\Models\\Adapters\\{name}Adapter."
+        },
+        "initializer": {
+            "type": "string",
+            "description": "FQCN of the initializer to register the listener and DI binding in",
+            "example": "AcmeBilling\\AppInit",
+            "aiHint": "For a plugin scaffolded via phpnomad/wp-plugin, use {namespace}\\AppInit. Same one you used for phpnomad/datastore."
+        }
+    },
+    "requires": [],
+    "files": [
+        {
+            "path": "lib/Datastores/{{name}}/{{name}}CptDatastoreHandler.php",
+            "template": "wp-cpt-handler",
+            "vars": {
+                "className": "{{name}}CptDatastoreHandler"
+            }
+        }
+    ],
+    "registrations": [
+        {
+            "initializer": "{{initializer}}",
+            "method": "getClassDefinitions",
+            "interface": "PHPNomad\\Loader\\Interfaces\\HasClassDefinitions",
+            "type": "map",
+            "key": "{{namespace}}\\{{name}}CptDatastoreHandler",
+            "value": "{{handlerInterface}}"
+        }
+    ],
+    "recipes": [
+        {
+            "recipe": "phpnomad/cpt",
+            "vars": {
+                "name": "{{name}}",
+                "postType": "{{postType}}",
+                "pluralLabel": "{{pluralLabel}}",
+                "singularLabel": "{{singularLabel}}",
+                "textDomain": "{{textDomain}}",
+                "initializer": "{{initializer}}"
+            }
+        }
+    ]
+}

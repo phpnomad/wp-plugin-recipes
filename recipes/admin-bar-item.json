@@ -1,0 +1,88 @@
+{
+    "name": "admin-bar-item",
+    "kind": "scaffolding",
+    "stability": "experimental",
+    "summary": "Add an item to the WordPress admin bar via a Ready event listener.",
+    "description": "Scaffolds a Ready listener that hooks admin_bar_menu and adds a node with a configurable title, link, and tooltip.",
+    "problem": "You want a quick-access shortcut in the wp-admin top bar (status indicator, deep link, action button).",
+    "appliesWhen": [
+        "Logged-in users need quick access to a plugin feature",
+        "The shortcut should be visible across both the front-end bar and wp-admin"
+    ],
+    "avoidWhen": [
+        "The shortcut is logged-out only (admin bar isn't shown to anonymous users)",
+        "You need a complex UI element (admin bar nodes are simple links)"
+    ],
+    "synonyms": {
+        "general": ["toolbar item", "quick link"],
+        "wordpress": ["admin bar item", "admin_bar_menu", "toolbar"]
+    },
+    "examples": [
+        "Add a 'Sync Now' shortcut to the admin bar",
+        "Surface a status indicator on the admin bar"
+    ],
+    "tags": ["wordpress", "admin", "ui", "admin-bar"],
+    "tradeoffs": "One class plus a listener registration. Admin bar nodes are simple — for richer interaction, use an admin page and link to it from here.",
+    "relatedPatterns": [
+        {"recipe": "phpnomad/admin-page", "relationship": "often-linked-from-this"}
+    ],
+    "outputs": [
+        "A {name} class implementing CanHandle that hooks admin_bar_menu",
+        "A getListeners() entry mapping Ready to {name}"
+    ],
+    "postApply": [
+        "Edit shouldRender() to gate visibility correctly",
+        "Edit href() to point at the right URL",
+        "Add child nodes if you need a dropdown (call $bar->add_node multiple times with parent = nodeId)"
+    ],
+    "vars": {
+        "name": {
+            "type": "string",
+            "description": "Class name (PascalCase)",
+            "example": "SyncNowBarItem"
+        },
+        "nodeId": {
+            "type": "string",
+            "description": "Unique admin bar node id (lowercase, dash-separated)",
+            "example": "acme-sync-now",
+            "aiHint": "Plugin-prefixed."
+        },
+        "title": {
+            "type": "string",
+            "description": "Visible label",
+            "example": "Sync Now"
+        },
+        "tooltip": {
+            "type": "string",
+            "description": "Hover tooltip text",
+            "example": "Trigger a manual sync"
+        },
+        "textDomain": {
+            "type": "string",
+            "description": "Plugin text domain",
+            "example": "acme-billing"
+        },
+        "initializer": {
+            "type": "string",
+            "description": "FQCN of the initializer",
+            "example": "AcmeBilling\\AppInit"
+        }
+    },
+    "requires": [],
+    "files": [
+        {
+            "path": "lib/Admin/{{name}}.php",
+            "template": "wp-admin-bar-item"
+        }
+    ],
+    "registrations": [
+        {
+            "initializer": "{{initializer}}",
+            "method": "getListeners",
+            "interface": "PHPNomad\\Events\\Interfaces\\HasListeners",
+            "type": "map",
+            "key": "PHPNomad\\Core\\Events\\Ready",
+            "value": "{{namespace}}\\{{name}}"
+        }
+    ]
+}

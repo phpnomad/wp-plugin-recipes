@@ -1,0 +1,101 @@
+{
+    "name": "cpt",
+    "kind": "scaffolding",
+    "stability": "experimental",
+    "summary": "Register a WordPress custom post type via a Ready event listener.",
+    "description": "Scaffolds a class that registers a custom post type when the PHPNomad Ready event fires (which dispatches on WordPress's init hook). Use this when the CPT belongs to WordPress and other code interacts with it via WP_Query, get_post_meta, etc., without going through a PHPNomad datastore.",
+    "problem": "You need to add a custom post type to your plugin and other code (yours or third-party) will interact with it through standard WordPress APIs rather than a typed PHPNomad datastore.",
+    "appliesWhen": [
+        "You want a custom post type registered with WordPress",
+        "Consumers of the data will use WP_Query, get_post_meta, or the REST API directly",
+        "You do not want or need a typed datastore wrapping the CPT",
+        "The CPT is content-shaped (posts, pages, articles) more than entity-shaped"
+    ],
+    "avoidWhen": [
+        "You want typed CRUD access through a PHPNomad datastore (use phpnomad/cpt-datastore for the full stack, or phpnomad/cpt-handler if a datastore already exists)",
+        "The data is not really post-shaped (use phpnomad/database-datastore or another storage)"
+    ],
+    "synonyms": {
+        "general": ["custom post type", "CPT", "post type", "content type"],
+        "wordpress": ["custom post type", "CPT", "register_post_type", "post type"],
+        "drupal": ["content type"]
+    },
+    "examples": [
+        "Add a custom post type for events",
+        "Register a recipes post type",
+        "I need a portfolio post type",
+        "Add a CPT for testimonials"
+    ],
+    "tags": ["wordpress", "cpt", "content"],
+    "tradeoffs": "Produces one class plus a listener registration in AppInit. The CPT lives at the WordPress level only; consumers must use WP_Query and friends. If you want typed access later, scaffold a phpnomad/cpt-handler against the same post type slug.",
+    "relatedPatterns": [
+        {"recipe": "phpnomad/cpt-handler", "relationship": "elevator-up-add-typed-handler"},
+        {"recipe": "phpnomad/cpt-datastore", "relationship": "full-stack-composite"},
+        {"recipe": "phpnomad/taxonomy", "relationship": "often-paired"},
+        {"recipe": "phpnomad/listener", "relationship": "general-form-of-this-pattern"}
+    ],
+    "outputs": [
+        "A {name} class implementing CanHandle that registers the CPT on Ready",
+        "A getListeners() entry in the initializer mapping Ready to {name}"
+    ],
+    "postApply": [
+        "Customize the register_post_type() args in the generated handle() method (labels, capabilities, supports, taxonomies, menu_icon, etc.)",
+        "Run `wp post-type list` (WP-CLI) to confirm registration after activating the plugin",
+        "If you also want typed CRUD access, run phpnomad/cpt-handler or phpnomad/cpt-datastore against the same postType slug"
+    ],
+    "vars": {
+        "name": {
+            "type": "string",
+            "description": "Class name for the registrar (PascalCase, no suffix)",
+            "example": "Order",
+            "aiHint": "Singular PascalCase entity name. Convention: name the registrar after the entity (Order, not RegisterOrder or OrderPostType)."
+        },
+        "postType": {
+            "type": "string",
+            "description": "WordPress post type slug (lowercase, dash-separated, max 20 chars)",
+            "example": "acme-order",
+            "aiHint": "lowercase with optional dashes. Should be prefixed by the plugin slug to avoid collisions with other plugins (e.g., acme-order, not order). Max 20 chars per WordPress."
+        },
+        "pluralLabel": {
+            "type": "string",
+            "description": "Plural display name shown in admin UI",
+            "example": "Orders",
+            "aiHint": "Title-case plural noun. Used in menu labels and screen headings."
+        },
+        "singularLabel": {
+            "type": "string",
+            "description": "Singular display name shown in admin UI",
+            "example": "Order",
+            "aiHint": "Title-case singular noun. Used in 'Add New' and 'Edit' labels."
+        },
+        "textDomain": {
+            "type": "string",
+            "description": "Plugin text domain for label translations",
+            "example": "acme-billing",
+            "aiHint": "Match the plugin's text domain (set during phpnomad/wp-plugin bootstrap). Used as the second arg to __()."
+        },
+        "initializer": {
+            "type": "string",
+            "description": "FQCN of the initializer to register the listener in",
+            "example": "AcmeBilling\\AppInit",
+            "aiHint": "For a plugin scaffolded via phpnomad/wp-plugin, use {namespace}\\AppInit."
+        }
+    },
+    "requires": [],
+    "files": [
+        {
+            "path": "lib/PostTypes/{{name}}.php",
+            "template": "wp-cpt-registrar"
+        }
+    ],
+    "registrations": [
+        {
+            "initializer": "{{initializer}}",
+            "method": "getListeners",
+            "interface": "PHPNomad\\Events\\Interfaces\\HasListeners",
+            "type": "map",
+            "key": "PHPNomad\\Core\\Events\\Ready",
+            "value": "{{namespace}}\\{{name}}"
+        }
+    ]
+}

@@ -1,0 +1,103 @@
+{
+    "name": "admin-page",
+    "kind": "scaffolding",
+    "stability": "experimental",
+    "summary": "Add a top-level WordPress admin menu page via a Ready event listener.",
+    "description": "Scaffolds a Ready listener that hooks admin_menu and renders a top-level wp-admin page. Includes a default capability check and a render() method ready to be filled in.",
+    "problem": "You need a custom admin page (settings, dashboard, status panel) and you want it registered through PHPNomad's listener pattern instead of dropping admin_menu hooks ad hoc.",
+    "appliesWhen": [
+        "You need a top-level menu item in wp-admin",
+        "The page is rendered server-side (PHP) or hosts a JS app mount point",
+        "Capability-based access is sufficient (no per-user ACL)"
+    ],
+    "avoidWhen": [
+        "You want a submenu under an existing menu (fork the template to use add_submenu_page)",
+        "You're building a Settings API screen (consider register_setting + Settings API hooks instead)"
+    ],
+    "synonyms": {
+        "general": ["admin screen", "dashboard page", "settings page"],
+        "wordpress": ["admin menu page", "wp-admin page", "add_menu_page"]
+    },
+    "examples": [
+        "Add a Settings page under the plugin's menu",
+        "Create a Status Dashboard admin page"
+    ],
+    "tags": ["wordpress", "admin", "ui"],
+    "tradeoffs": "One class plus a listener registration. Renders inline HTML — for richer UIs, mount a JS app inside render() and enqueue scripts via phpnomad/scripts-bundle.",
+    "relatedPatterns": [
+        {"recipe": "phpnomad/scripts-bundle", "relationship": "often-paired-for-js-rendered-pages"},
+        {"recipe": "phpnomad/styles-bundle", "relationship": "often-paired-for-styled-pages"}
+    ],
+    "outputs": [
+        "A {name} class implementing CanHandle that adds the menu page",
+        "A getListeners() entry mapping Ready to {name}"
+    ],
+    "postApply": [
+        "Fill in render() with the actual page contents",
+        "Adjust the capability if the default 'manage_options' isn't right",
+        "Customize iconUrl (a dashicon slug like 'dashicons-chart-bar', or a URL)"
+    ],
+    "vars": {
+        "name": {
+            "type": "string",
+            "description": "Class name (PascalCase)",
+            "example": "SettingsPage",
+            "aiHint": "PascalCase. Suffix with Page makes the role obvious."
+        },
+        "pageTitle": {
+            "type": "string",
+            "description": "Browser tab title and page heading",
+            "example": "Acme Billing Settings"
+        },
+        "menuTitle": {
+            "type": "string",
+            "description": "Menu label in the wp-admin sidebar",
+            "example": "Acme Billing"
+        },
+        "menuSlug": {
+            "type": "string",
+            "description": "Unique menu slug (lowercase, dash-separated)",
+            "example": "acme-billing-settings",
+            "aiHint": "Plugin-prefixed to avoid collisions with other menus."
+        },
+        "capability": {
+            "type": "string",
+            "description": "WordPress capability required to see and access the page",
+            "example": "manage_options",
+            "aiHint": "Use a built-in capability when possible: manage_options for site admins, edit_posts for editors."
+        },
+        "iconUrl": {
+            "type": "string",
+            "description": "Dashicon slug or icon URL",
+            "example": "dashicons-chart-bar",
+            "aiHint": "Use a dashicons-* slug for built-in icons, or 'none' for no icon."
+        },
+        "textDomain": {
+            "type": "string",
+            "description": "Plugin text domain",
+            "example": "acme-billing"
+        },
+        "initializer": {
+            "type": "string",
+            "description": "FQCN of the initializer",
+            "example": "AcmeBilling\\AppInit"
+        }
+    },
+    "requires": [],
+    "files": [
+        {
+            "path": "lib/Admin/{{name}}.php",
+            "template": "wp-admin-page"
+        }
+    ],
+    "registrations": [
+        {
+            "initializer": "{{initializer}}",
+            "method": "getListeners",
+            "interface": "PHPNomad\\Events\\Interfaces\\HasListeners",
+            "type": "map",
+            "key": "PHPNomad\\Core\\Events\\Ready",
+            "value": "{{namespace}}\\{{name}}"
+        }
+    ]
+}

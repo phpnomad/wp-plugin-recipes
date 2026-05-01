@@ -1,0 +1,99 @@
+{
+    "name": "meta",
+    "kind": "scaffolding",
+    "stability": "experimental",
+    "summary": "Register a post meta key on a post type via a Ready event listener.",
+    "description": "Scaffolds a class that calls register_post_meta() on Ready, exposing the meta to the REST API and applying type/default/sanitize callbacks.",
+    "problem": "You need a piece of structured data attached to posts of a specific post type — and you want WordPress to know the type, default, and visibility so the REST API exposes it correctly.",
+    "appliesWhen": [
+        "You need a single meta key on a known post type",
+        "You want REST API exposure for the meta",
+        "Other code reads/writes the meta via get_post_meta/update_post_meta directly"
+    ],
+    "avoidWhen": [
+        "You want a typed accessor (use phpnomad/meta-provider, or phpnomad/attribute for both)",
+        "The meta is a one-off internal flag with no REST exposure (just call get_post_meta directly)",
+        "You need term/user/comment meta — this recipe targets post meta only"
+    ],
+    "synonyms": {
+        "general": ["custom field", "metadata", "attribute"],
+        "wordpress": ["post meta", "register_post_meta", "custom field"]
+    },
+    "examples": [
+        "Register a price meta key on the product post type",
+        "Add an event_date meta to events"
+    ],
+    "tags": ["wordpress", "meta", "post-meta"],
+    "tradeoffs": "One class plus a listener registration. The meta lives at the WordPress level only; consumers must use get_post_meta/update_post_meta.",
+    "relatedPatterns": [
+        {"recipe": "phpnomad/meta-provider", "relationship": "elevator-up-add-typed-accessor"},
+        {"recipe": "phpnomad/attribute", "relationship": "full-stack-composite"},
+        {"recipe": "phpnomad/cpt", "relationship": "often-paired-with-the-post-type-registrar"}
+    ],
+    "outputs": [
+        "A {name} class implementing CanHandle that registers the meta on Ready",
+        "A getListeners() entry mapping Ready to {name}"
+    ],
+    "postApply": [
+        "Edit defaultValue() to return the actual default",
+        "Customize sanitize_callback and auth_callback if the meta is user-editable",
+        "Verify with `wp post meta list <postId>` (WP-CLI)"
+    ],
+    "vars": {
+        "name": {
+            "type": "string",
+            "description": "Class name for the registrar (PascalCase, no suffix)",
+            "example": "EventDate",
+            "aiHint": "PascalCase. Convention: name after the meta concept (EventDate), not RegisterEventDate."
+        },
+        "metaKey": {
+            "type": "string",
+            "description": "Meta key stored in the database",
+            "example": "_acme_event_date",
+            "aiHint": "Convention: prefix with _ to hide from default custom-fields UI, plus plugin slug to avoid collisions."
+        },
+        "postType": {
+            "type": "string",
+            "description": "Post type slug the meta attaches to",
+            "example": "acme-event"
+        },
+        "metaType": {
+            "type": "string",
+            "description": "WordPress meta type: string, boolean, integer, number, array, object",
+            "example": "string",
+            "aiHint": "One of WordPress's allowed types: string, boolean, integer, number, array, object."
+        },
+        "description": {
+            "type": "string",
+            "description": "Human description shown in REST schemas",
+            "example": "Event start date in ISO 8601 format"
+        },
+        "textDomain": {
+            "type": "string",
+            "description": "Plugin text domain",
+            "example": "acme-billing"
+        },
+        "initializer": {
+            "type": "string",
+            "description": "FQCN of the initializer to register the listener in",
+            "example": "AcmeBilling\\AppInit"
+        }
+    },
+    "requires": [],
+    "files": [
+        {
+            "path": "lib/Meta/{{name}}.php",
+            "template": "wp-meta-registrar"
+        }
+    ],
+    "registrations": [
+        {
+            "initializer": "{{initializer}}",
+            "method": "getListeners",
+            "interface": "PHPNomad\\Events\\Interfaces\\HasListeners",
+            "type": "map",
+            "key": "PHPNomad\\Core\\Events\\Ready",
+            "value": "{{namespace}}\\{{name}}"
+        }
+    ]
+}

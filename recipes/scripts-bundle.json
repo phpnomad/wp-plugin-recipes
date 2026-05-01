@@ -1,0 +1,87 @@
+{
+    "name": "scripts-bundle",
+    "kind": "scaffolding",
+    "stability": "experimental",
+    "summary": "Enqueue a JavaScript bundle on front-end and/or admin via a Ready event listener.",
+    "description": "Scaffolds a Ready listener that hooks both wp_enqueue_scripts and admin_enqueue_scripts to enqueue a JS bundle. Reads dependencies and version from a companion .asset.php file (the @wordpress/scripts convention).",
+    "problem": "You have a built JavaScript bundle that needs to be enqueued in WordPress and you want a single, lifecycle-managed class doing it instead of a stray hook.",
+    "appliesWhen": [
+        "You ship a built JS bundle (Webpack, @wordpress/scripts, Vite, etc.)",
+        "You want consistent enqueueing across front-end and admin",
+        "You're using or willing to follow the @wordpress/scripts asset.php convention"
+    ],
+    "avoidWhen": [
+        "The script is a tiny inline snippet (use wp_add_inline_script directly)",
+        "The script is third-party with its own enqueueing approach"
+    ],
+    "synonyms": {
+        "general": ["JS bundle", "asset enqueue"],
+        "wordpress": ["script enqueue", "wp_enqueue_script"]
+    },
+    "examples": [
+        "Enqueue the admin React bundle",
+        "Load the front-end widget script"
+    ],
+    "tags": ["wordpress", "assets", "javascript"],
+    "tradeoffs": "One class plus a listener registration. Enqueues on both front-end and admin by default — narrow this in shouldEnqueue() if you only need one. Constructor expects pluginUrl and pluginPath — wire those via DI.",
+    "relatedPatterns": [
+        {"recipe": "phpnomad/styles-bundle", "relationship": "often-paired"},
+        {"recipe": "phpnomad/admin-page", "relationship": "often-mounted-into"}
+    ],
+    "outputs": [
+        "A {name} class implementing CanHandle that hooks wp_enqueue_scripts and admin_enqueue_scripts",
+        "A getListeners() entry mapping Ready to {name}"
+    ],
+    "postApply": [
+        "Edit shouldEnqueue() to scope where the script loads",
+        "Wire pluginUrl/pluginPath via DI (typically constants set during plugin bootstrap)",
+        "Build the bundle with @wordpress/scripts to generate the companion .asset.php file"
+    ],
+    "vars": {
+        "name": {
+            "type": "string",
+            "description": "Class name (PascalCase)",
+            "example": "AdminBundle",
+            "aiHint": "PascalCase. Suffix with Bundle or Scripts for clarity."
+        },
+        "handle": {
+            "type": "string",
+            "description": "Script handle (used by wp_enqueue_script)",
+            "example": "acme-admin",
+            "aiHint": "lowercase, dash-separated, plugin-prefixed."
+        },
+        "srcPath": {
+            "type": "string",
+            "description": "Path to the JS bundle relative to plugin root",
+            "example": "build/admin.js",
+            "aiHint": "Match the output path your bundler writes."
+        },
+        "assetMetaPath": {
+            "type": "string",
+            "description": "Path to the .asset.php metadata file relative to plugin root",
+            "example": "build/admin.asset.php"
+        },
+        "initializer": {
+            "type": "string",
+            "description": "FQCN of the initializer",
+            "example": "AcmeBilling\\AppInit"
+        }
+    },
+    "requires": [],
+    "files": [
+        {
+            "path": "lib/Assets/{{name}}.php",
+            "template": "wp-scripts-bundle"
+        }
+    ],
+    "registrations": [
+        {
+            "initializer": "{{initializer}}",
+            "method": "getListeners",
+            "interface": "PHPNomad\\Events\\Interfaces\\HasListeners",
+            "type": "map",
+            "key": "PHPNomad\\Core\\Events\\Ready",
+            "value": "{{namespace}}\\{{name}}"
+        }
+    ]
+}

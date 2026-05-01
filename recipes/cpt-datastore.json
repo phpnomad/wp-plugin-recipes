@@ -1,0 +1,133 @@
+{
+    "name": "cpt-datastore",
+    "kind": "composite",
+    "stability": "experimental",
+    "summary": "Full CPT-backed entity stack: model, adapter, datastore, registrar, and WordPress-backed handler in one shot.",
+    "description": "Creates a complete WordPress-backed datastore stack: model, model adapter, datastore (interface + handler interface + implementation), the post type registrar, and a CPT-backed handler that translates the typed datastore into wp_insert_post / WP_Query / wp_update_post / wp_delete_post calls.",
+    "problem": "You're starting a new entity that lives in WordPress posts and you want the entire idiomatic PHPNomad stack scaffolded in one shot — typed model, registered post type, datastore interface and implementation, and the CPT-backed handler that ties them together — without copying boilerplate from another plugin.",
+    "appliesWhen": [
+        "You're starting a new entity that will live in WordPress as a custom post type",
+        "You want the conventional PHPNomad data layer end-to-end with no gaps",
+        "Consumers should access the entity through a typed datastore, not WP_Query directly",
+        "The data is post-shaped enough that posts + post meta is a sensible store",
+        "You want one command that produces a working baseline you can flesh out"
+    ],
+    "avoidWhen": [
+        "You only need the post type registered — use phpnomad/cpt instead",
+        "You already have a datastore and only need a CPT-backed handler — use phpnomad/cpt-handler",
+        "The data is genuinely relational and not post-shaped — use phpnomad/database-datastore against a custom table",
+        "You want WordPress code to interact via WP_Query directly with no datastore — use phpnomad/cpt"
+    ],
+    "synonyms": {
+        "general": ["full data layer for a CPT", "CPT entity scaffold", "post-type-backed CRUD scaffold", "complete WordPress data stack"],
+        "wordpress": ["custom post type with data layer", "CPT with datastore", "post-type-backed entity"]
+    },
+    "examples": [
+        "Set up everything I need to store events in WordPress as a CPT",
+        "Scaffold a full data layer for portfolio items backed by a post type",
+        "Bootstrap CRUD for testimonials with a custom post type",
+        "Create the entire data stack for an entity stored as posts"
+    ],
+    "tags": ["wordpress", "cpt", "data", "crud", "composite"],
+    "tradeoffs": "Generates seven files plus DI bindings and a Ready listener. Fast to bootstrap, but you'll be editing TODOs (model fields, adapter translations, post-vs-meta field map). WordPress meta_query is convenient but slow at scale — if performance matters use phpnomad/database-datastore instead.",
+    "relatedPatterns": [
+        {"recipe": "phpnomad/model", "relationship": "child-recipe"},
+        {"recipe": "phpnomad/model-adapter", "relationship": "child-recipe"},
+        {"recipe": "phpnomad/datastore", "relationship": "child-recipe"},
+        {"recipe": "phpnomad/cpt-handler", "relationship": "child-recipe"},
+        {"recipe": "phpnomad/cpt", "relationship": "grandchild-recipe-via-cpt-handler"},
+        {"recipe": "phpnomad/database-datastore", "relationship": "alternative-storage-backend"}
+    ],
+    "outputs": [
+        "A {name} model class",
+        "A {name}Adapter model adapter",
+        "A {name} CPT registrar at lib/PostTypes/{name}.php",
+        "A {name}Datastore class plus its public and handler interfaces",
+        "A {name}CptDatastoreHandler implementing the handler interface against WordPress",
+        "DI bindings tying it all together plus a Ready listener for the registrar"
+    ],
+    "postApply": [
+        "Define properties on the {name} model",
+        "Implement the adapter's toModel/toArray translations",
+        "Customize POST_FIELDS in the handler — decide which model fields are post columns vs post meta",
+        "Customize the register_post_type() args in the registrar (capabilities, supports, taxonomies, etc.)",
+        "Smoke test reads and writes through the datastore inside WordPress",
+        "Run `wp post-type list` (WP-CLI) to confirm the CPT is registered"
+    ],
+    "vars": {
+        "name": {
+            "type": "string",
+            "description": "Entity name shared across model, adapter, datastore, registrar, and handler (PascalCase, no suffix)",
+            "example": "Order",
+            "aiHint": "Singular PascalCase. Same name flows through every generated file."
+        },
+        "postType": {
+            "type": "string",
+            "description": "WordPress post type slug (lowercase, dash-separated, max 20 chars)",
+            "example": "acme-order",
+            "aiHint": "lowercase with optional dashes. Should be prefixed by the plugin slug to avoid collisions (e.g. acme-order, not order). Max 20 chars per WordPress."
+        },
+        "pluralLabel": {
+            "type": "string",
+            "description": "Plural display name shown in admin UI",
+            "example": "Orders",
+            "aiHint": "Title-case plural noun."
+        },
+        "singularLabel": {
+            "type": "string",
+            "description": "Singular display name shown in admin UI",
+            "example": "Order",
+            "aiHint": "Title-case singular noun."
+        },
+        "textDomain": {
+            "type": "string",
+            "description": "Plugin text domain for label translations",
+            "example": "acme-billing",
+            "aiHint": "Match the plugin's text domain."
+        },
+        "initializer": {
+            "type": "string",
+            "description": "FQCN of the initializer to register DI bindings and the listener in",
+            "example": "AcmeBilling\\AppInit",
+            "aiHint": "For a plugin scaffolded via phpnomad/wp-plugin, use {namespace}\\AppInit."
+        }
+    },
+    "requires": [],
+    "files": [],
+    "registrations": [],
+    "recipes": [
+        {
+            "recipe": "phpnomad/model",
+            "vars": {
+                "name": "{{name}}"
+            }
+        },
+        {
+            "recipe": "phpnomad/model-adapter",
+            "vars": {
+                "name": "{{name}}Adapter",
+                "model": "{{rootNamespace}}\\Models\\{{name}}"
+            }
+        },
+        {
+            "recipe": "phpnomad/datastore",
+            "vars": {
+                "name": "{{name}}",
+                "initializer": "{{initializer}}"
+            }
+        },
+        {
+            "recipe": "phpnomad/cpt-handler",
+            "vars": {
+                "name": "{{name}}",
+                "postType": "{{postType}}",
+                "pluralLabel": "{{pluralLabel}}",
+                "singularLabel": "{{singularLabel}}",
+                "textDomain": "{{textDomain}}",
+                "handlerInterface": "{{rootNamespace}}\\Datastores\\{{name}}\\Interfaces\\{{name}}DatastoreHandler",
+                "modelAdapter": "{{rootNamespace}}\\Models\\Adapters\\{{name}}Adapter",
+                "initializer": "{{initializer}}"
+            }
+        }
+    ]
+}

@@ -1,0 +1,80 @@
+{
+    "name": "shortcode",
+    "kind": "scaffolding",
+    "stability": "experimental",
+    "summary": "Register a WordPress shortcode via a Ready event listener.",
+    "description": "Scaffolds a Ready listener that calls add_shortcode and renders output through a render() method.",
+    "problem": "You want users to embed dynamic content in posts/pages via a shortcode tag without hand-wiring add_shortcode calls.",
+    "appliesWhen": [
+        "The shortcode renders to HTML (forms, embeds, dynamic content)",
+        "Users will paste the shortcode into the classic editor or shortcode block",
+        "Attribute defaults can be expressed in PHP"
+    ],
+    "avoidWhen": [
+        "You're targeting block editor exclusively (write a Gutenberg block instead)",
+        "The output never changes per-render (use static HTML)"
+    ],
+    "synonyms": {
+        "general": ["embed tag", "macro", "template tag"],
+        "wordpress": ["shortcode", "add_shortcode", "[tag]"]
+    },
+    "examples": [
+        "Add a [acme_pricing_table] shortcode",
+        "Register a [latest_events] shortcode"
+    ],
+    "tags": ["wordpress", "shortcode", "content"],
+    "tradeoffs": "One class plus a listener registration. Shortcode output is captured via output buffering — for raw string output, return directly from render() without ob_*.",
+    "relatedPatterns": [
+        {"recipe": "phpnomad/listener", "relationship": "general-form-of-this-pattern"}
+    ],
+    "outputs": [
+        "A {name} class implementing CanHandle that registers the shortcode",
+        "A getListeners() entry mapping Ready to {name}"
+    ],
+    "postApply": [
+        "Replace the placeholder render output with the actual HTML",
+        "Declare attribute defaults in defaults()",
+        "Add validation for attribute values"
+    ],
+    "vars": {
+        "name": {
+            "type": "string",
+            "description": "Class name (PascalCase)",
+            "example": "PricingTableShortcode",
+            "aiHint": "PascalCase. Suffix with Shortcode for clarity."
+        },
+        "shortcodeTag": {
+            "type": "string",
+            "description": "Shortcode tag (used as [tag])",
+            "example": "acme_pricing_table",
+            "aiHint": "snake_case, plugin-prefixed to avoid collisions."
+        },
+        "textDomain": {
+            "type": "string",
+            "description": "Plugin text domain",
+            "example": "acme-billing"
+        },
+        "initializer": {
+            "type": "string",
+            "description": "FQCN of the initializer",
+            "example": "AcmeBilling\\AppInit"
+        }
+    },
+    "requires": [],
+    "files": [
+        {
+            "path": "lib/Shortcodes/{{name}}.php",
+            "template": "wp-shortcode"
+        }
+    ],
+    "registrations": [
+        {
+            "initializer": "{{initializer}}",
+            "method": "getListeners",
+            "interface": "PHPNomad\\Events\\Interfaces\\HasListeners",
+            "type": "map",
+            "key": "PHPNomad\\Core\\Events\\Ready",
+            "value": "{{namespace}}\\{{name}}"
+        }
+    ]
+}

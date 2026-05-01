@@ -1,0 +1,104 @@
+{
+    "name": "attribute",
+    "kind": "composite",
+    "stability": "experimental",
+    "summary": "Full post-meta stack: register the meta key on Ready and provide a typed accessor.",
+    "description": "Composite that scaffolds both the post meta registrar (with type/default declared via register_post_meta) and a typed provider service for read/write.",
+    "problem": "You're introducing a new piece of structured data on a post type and you want both the WordPress-level registration and a typed accessor in one shot.",
+    "appliesWhen": [
+        "You're starting fresh on a new post meta key",
+        "You want both registration and a typed accessor",
+        "Consumers should depend on a service rather than calling get_post_meta directly"
+    ],
+    "avoidWhen": [
+        "The meta already exists — use phpnomad/meta-provider only",
+        "You only need registration, no accessor — use phpnomad/meta only"
+    ],
+    "synonyms": {
+        "general": ["typed attribute", "structured field"],
+        "wordpress": ["registered meta with provider"]
+    },
+    "examples": [
+        "Add an event_date attribute on the events CPT with a typed accessor"
+    ],
+    "tags": ["wordpress", "meta", "post-meta", "composite"],
+    "tradeoffs": "Two classes plus a Ready listener. Targets post meta only — fork for term/user/comment meta.",
+    "relatedPatterns": [
+        {"recipe": "phpnomad/meta", "relationship": "child-recipe"},
+        {"recipe": "phpnomad/meta-provider", "relationship": "child-recipe"},
+        {"recipe": "phpnomad/cpt", "relationship": "often-paired-with-the-post-type"}
+    ],
+    "outputs": [
+        "A {name} meta registrar at lib/Meta/{name}.php",
+        "A {name}Provider accessor at lib/Meta/{name}Provider.php",
+        "A getListeners() entry registering the registrar on Ready"
+    ],
+    "postApply": [
+        "Edit defaultValue() in both classes",
+        "Customize sanitize_callback / auth_callback in the registrar if needed",
+        "Inject {name}Provider where you previously called get_post_meta()"
+    ],
+    "vars": {
+        "name": {
+            "type": "string",
+            "description": "Class name shared between the registrar and the provider (PascalCase)",
+            "example": "EventDate"
+        },
+        "metaKey": {
+            "type": "string",
+            "description": "Meta key stored in the database",
+            "example": "_acme_event_date"
+        },
+        "postType": {
+            "type": "string",
+            "description": "Post type slug the meta attaches to",
+            "example": "acme-event"
+        },
+        "metaType": {
+            "type": "string",
+            "description": "WordPress meta type",
+            "example": "string",
+            "aiHint": "One of: string, boolean, integer, number, array, object."
+        },
+        "description": {
+            "type": "string",
+            "description": "Human description for REST schemas",
+            "example": "Event start date in ISO 8601 format"
+        },
+        "textDomain": {
+            "type": "string",
+            "description": "Plugin text domain",
+            "example": "acme-billing"
+        },
+        "initializer": {
+            "type": "string",
+            "description": "FQCN of the initializer",
+            "example": "AcmeBilling\\AppInit"
+        }
+    },
+    "requires": [],
+    "files": [],
+    "registrations": [],
+    "recipes": [
+        {
+            "recipe": "phpnomad/meta",
+            "vars": {
+                "name": "{{name}}",
+                "metaKey": "{{metaKey}}",
+                "postType": "{{postType}}",
+                "metaType": "{{metaType}}",
+                "description": "{{description}}",
+                "textDomain": "{{textDomain}}",
+                "initializer": "{{initializer}}"
+            }
+        },
+        {
+            "recipe": "phpnomad/meta-provider",
+            "vars": {
+                "name": "{{name}}Provider",
+                "metaKey": "{{metaKey}}",
+                "postType": "{{postType}}"
+            }
+        }
+    ]
+}

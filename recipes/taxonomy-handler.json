@@ -1,0 +1,131 @@
+{
+    "name": "taxonomy-handler",
+    "kind": "scaffolding",
+    "stability": "experimental",
+    "summary": "WordPress-taxonomy-backed implementation of a datastore handler, plus a registrar for the taxonomy itself.",
+    "description": "Creates a datastore handler that translates a typed PHPNomad datastore interface into WordPress term CRUD (wp_insert_term, get_term, WP_Term_Query, wp_update_term, wp_delete_term). Composes phpnomad/taxonomy so the taxonomy is registered alongside the handler.",
+    "problem": "You already have a PHPNomad datastore (and its handler interface) and you want WordPress terms to be the actual backing storage — terms hold the records, term meta holds the extra fields — without writing the WP_Term_Query/term-meta plumbing by hand.",
+    "appliesWhen": [
+        "You already have a datastore (phpnomad/datastore) needing a backing implementation",
+        "The data is term-shaped (classification, hierarchy, named labels)",
+        "Consumers should still go through the typed datastore (not get_terms directly)",
+        "You want the taxonomy registered as part of this scaffold, not separately"
+    ],
+    "avoidWhen": [
+        "You don't have a datastore yet (use phpnomad/taxonomy-datastore for the full bundle)",
+        "The data is genuinely relational and not term-shaped (use phpnomad/database-handler)",
+        "You want WordPress code to interact via get_terms directly with no datastore (use phpnomad/taxonomy alone)"
+    ],
+    "synonyms": {
+        "general": ["taxonomy-backed handler", "term repository", "WordPress-backed datastore handler"],
+        "wordpress": ["taxonomy handler", "term-backed handler"]
+    },
+    "examples": [
+        "Back the RegionDatastore with the acme-region taxonomy",
+        "Wire the existing TopicDatastore to a topics taxonomy"
+    ],
+    "tags": ["wordpress", "taxonomy", "data", "persistence"],
+    "tradeoffs": "Implements all four datastore interfaces against WP term APIs. No abstract base — the generated class is the implementation. Where/findBy clauses translate to term meta_query, slow at scale. Use phpnomad/database-datastore for performance.",
+    "relatedPatterns": [
+        {"recipe": "phpnomad/datastore", "relationship": "interface-this-implements"},
+        {"recipe": "phpnomad/taxonomy", "relationship": "child-recipe"},
+        {"recipe": "phpnomad/taxonomy-datastore", "relationship": "composite-that-includes-this"}
+    ],
+    "outputs": [
+        "A {name} taxonomy registrar at lib/Taxonomies/{name}.php (via child recipe)",
+        "A {name}TaxonomyDatastoreHandler class at lib/Datastores/{name}/{name}TaxonomyDatastoreHandler.php",
+        "A getListeners() entry registering the registrar on Ready",
+        "A DI binding mapping the handler implementation to the handler interface"
+    ],
+    "postApply": [
+        "Edit register_taxonomy() args in the registrar (hierarchy, capabilities, rewrite, default_term)",
+        "Customize TERM_FIELDS in the handler — decide which model fields are term columns vs term meta",
+        "Fill in the model adapter's toArray/toModel translations",
+        "Smoke test create/find/update/delete through the datastore"
+    ],
+    "vars": {
+        "name": {
+            "type": "string",
+            "description": "Entity name shared across the registrar, the handler, and related datastore (PascalCase, no suffix)",
+            "example": "Region",
+            "aiHint": "Singular PascalCase. Same name as the datastore/model/adapter."
+        },
+        "taxonomy": {
+            "type": "string",
+            "description": "WordPress taxonomy slug",
+            "example": "acme-region",
+            "aiHint": "lowercase with optional dashes. Should be plugin-prefixed."
+        },
+        "objectType": {
+            "type": "string",
+            "description": "Post type slug this taxonomy attaches to",
+            "example": "acme-event",
+            "aiHint": "Use the post type the taxonomy classifies."
+        },
+        "pluralLabel": {
+            "type": "string",
+            "description": "Plural display name shown in admin UI",
+            "example": "Regions"
+        },
+        "singularLabel": {
+            "type": "string",
+            "description": "Singular display name shown in admin UI",
+            "example": "Region"
+        },
+        "textDomain": {
+            "type": "string",
+            "description": "Plugin text domain",
+            "example": "acme-billing"
+        },
+        "handlerInterface": {
+            "type": "string",
+            "description": "FQCN of the datastore handler interface",
+            "example": "AcmeBilling\\Datastores\\Region\\Interfaces\\RegionDatastoreHandler",
+            "aiHint": "Use the handler interface produced by phpnomad/datastore."
+        },
+        "modelAdapter": {
+            "type": "string",
+            "description": "FQCN of the model adapter class",
+            "example": "AcmeBilling\\Models\\Adapters\\RegionAdapter"
+        },
+        "initializer": {
+            "type": "string",
+            "description": "FQCN of the initializer to register the listener and DI binding in",
+            "example": "AcmeBilling\\AppInit"
+        }
+    },
+    "requires": [],
+    "files": [
+        {
+            "path": "lib/Datastores/{{name}}/{{name}}TaxonomyDatastoreHandler.php",
+            "template": "wp-taxonomy-handler",
+            "vars": {
+                "className": "{{name}}TaxonomyDatastoreHandler"
+            }
+        }
+    ],
+    "registrations": [
+        {
+            "initializer": "{{initializer}}",
+            "method": "getClassDefinitions",
+            "interface": "PHPNomad\\Loader\\Interfaces\\HasClassDefinitions",
+            "type": "map",
+            "key": "{{namespace}}\\{{name}}TaxonomyDatastoreHandler",
+            "value": "{{handlerInterface}}"
+        }
+    ],
+    "recipes": [
+        {
+            "recipe": "phpnomad/taxonomy",
+            "vars": {
+                "name": "{{name}}",
+                "taxonomy": "{{taxonomy}}",
+                "objectType": "{{objectType}}",
+                "pluralLabel": "{{pluralLabel}}",
+                "singularLabel": "{{singularLabel}}",
+                "textDomain": "{{textDomain}}",
+                "initializer": "{{initializer}}"
+            }
+        }
+    ]
+}

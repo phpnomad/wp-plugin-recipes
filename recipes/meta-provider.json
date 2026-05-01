@@ -1,0 +1,64 @@
+{
+    "name": "meta-provider",
+    "kind": "scaffolding",
+    "stability": "experimental",
+    "summary": "Typed accessor service for an existing post meta key.",
+    "description": "Scaffolds a service class that wraps get_post_meta/update_post_meta/delete_post_meta for a single meta key. Autowired via the DI container.",
+    "problem": "A post meta key already exists (registered via phpnomad/meta or used by WordPress) and you want consumers to access it through a typed service.",
+    "appliesWhen": [
+        "The meta key already exists or is registered separately",
+        "You want a single class that owns read/write of the meta",
+        "Consumers should depend on this service via DI"
+    ],
+    "avoidWhen": [
+        "You want both registration and accessor — use phpnomad/attribute",
+        "The meta is on terms/users/comments — fork the template (this targets post meta)"
+    ],
+    "synonyms": {
+        "general": ["meta accessor", "field service"],
+        "wordpress": ["meta provider", "post meta wrapper"]
+    },
+    "examples": [
+        "Wrap _acme_event_date with a typed EventDateProvider"
+    ],
+    "tags": ["wordpress", "meta", "service"],
+    "tradeoffs": "One service class. Class is concrete by default — extract an interface if you need to mock it.",
+    "relatedPatterns": [
+        {"recipe": "phpnomad/meta", "relationship": "registers-the-meta-this-reads"},
+        {"recipe": "phpnomad/attribute", "relationship": "composite-that-includes-this"}
+    ],
+    "outputs": [
+        "A {name} service class at lib/Meta/{name}.php (autowired, no explicit binding required)"
+    ],
+    "postApply": [
+        "Add typed methods on top of get/set",
+        "Update defaultValue() to match the meta's expected shape",
+        "Inject {name} where consumers currently call get_post_meta()"
+    ],
+    "vars": {
+        "name": {
+            "type": "string",
+            "description": "Class name (PascalCase)",
+            "example": "EventDateProvider",
+            "aiHint": "Suffix with Provider for clarity."
+        },
+        "metaKey": {
+            "type": "string",
+            "description": "Post meta key this provider wraps",
+            "example": "_acme_event_date"
+        },
+        "postType": {
+            "type": "string",
+            "description": "Post type slug the meta belongs to (informational, used in the docblock)",
+            "example": "acme-event"
+        }
+    },
+    "requires": [],
+    "files": [
+        {
+            "path": "lib/Meta/{{name}}.php",
+            "template": "wp-meta-provider"
+        }
+    ],
+    "registrations": []
+}

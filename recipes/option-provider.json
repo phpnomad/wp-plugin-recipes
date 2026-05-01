@@ -1,0 +1,62 @@
+{
+    "name": "option-provider",
+    "kind": "scaffolding",
+    "stability": "experimental",
+    "summary": "Typed accessor service for an existing WordPress option.",
+    "description": "Scaffolds a service class that wraps get_option/update_option/delete_option for a single option key, registered as a singleton in DI.",
+    "problem": "An option already exists (registered via phpnomad/option, or just used by WordPress) and you want consumers to access it through a typed service rather than sprinkling get_option() calls and string keys across the codebase.",
+    "appliesWhen": [
+        "An option already exists or will be registered separately",
+        "You want a single class that owns read/write of that option",
+        "Consumers should depend on this service via DI",
+        "You expect to add domain methods (e.g. isFeatureEnabled()) over time"
+    ],
+    "avoidWhen": [
+        "You want both registration and the accessor — use phpnomad/setting",
+        "You only need a one-off get_option call — just call it",
+        "The option has many sub-fields each needing their own accessor — model it as multiple options or a typed config object"
+    ],
+    "synonyms": {
+        "general": ["config service", "settings reader", "option wrapper"],
+        "wordpress": ["option provider", "settings service"]
+    },
+    "examples": [
+        "Wrap acme_settings with a typed AcmeSettingsProvider",
+        "Add a service for reading the feature_flags option"
+    ],
+    "tags": ["wordpress", "option", "config", "service"],
+    "tradeoffs": "One service class plus a DI binding. The class is concrete (no interface) by default — extract an interface if you need to mock it or want multiple backends.",
+    "relatedPatterns": [
+        {"recipe": "phpnomad/option", "relationship": "registers-the-option-this-reads"},
+        {"recipe": "phpnomad/setting", "relationship": "composite-that-includes-this"}
+    ],
+    "outputs": [
+        "A {name} service class at lib/Options/{name}.php (autowired via the DI container, no explicit binding required)"
+    ],
+    "postApply": [
+        "Add typed methods on top of get/set as your usage solidifies",
+        "Update defaultValue() to match the option's expected shape",
+        "Inject {name} where consumers currently call get_option()"
+    ],
+    "vars": {
+        "name": {
+            "type": "string",
+            "description": "Class name (PascalCase, no suffix)",
+            "example": "AcmeSettingsProvider",
+            "aiHint": "PascalCase. Suffix with Provider to make the role obvious."
+        },
+        "optionName": {
+            "type": "string",
+            "description": "WordPress option key this provider wraps",
+            "example": "acme_settings"
+        }
+    },
+    "requires": [],
+    "files": [
+        {
+            "path": "lib/Options/{{name}}.php",
+            "template": "wp-option-provider"
+        }
+    ],
+    "registrations": []
+}

@@ -1,0 +1,79 @@
+{
+    "name": "option",
+    "kind": "scaffolding",
+    "stability": "experimental",
+    "summary": "Register a WordPress option with a default value via a Ready event listener.",
+    "description": "Scaffolds a class that calls add_option() with a default value on Ready. Idempotent — re-running has no effect on existing options.",
+    "problem": "You need a WordPress option to exist with a sensible default at runtime, and you don't want to scatter add_option() calls across activation hooks.",
+    "appliesWhen": [
+        "You need a single named option (autoloaded by default)",
+        "You can express a sensible default value in PHP",
+        "Other code reads/writes the option via get_option/update_option directly",
+        "You don't need a typed wrapper around access yet"
+    ],
+    "avoidWhen": [
+        "You want a typed accessor (use phpnomad/option-provider, or phpnomad/setting for both)",
+        "The option is part of the WordPress Settings API (use phpnomad/setting which handles register_setting)",
+        "The data is a collection of records (use phpnomad/database-datastore or a CPT)"
+    ],
+    "synonyms": {
+        "general": ["config", "default value", "global setting"],
+        "wordpress": ["option", "wp_options", "add_option", "site option"]
+    },
+    "examples": [
+        "Register an acme_settings option with default values",
+        "Add a feature flag option for the plugin",
+        "Set up a default config option for the integration"
+    ],
+    "tags": ["wordpress", "option", "config"],
+    "tradeoffs": "One class plus a listener registration. The option lives at the WordPress level only; consumers must use get_option/update_option.",
+    "relatedPatterns": [
+        {"recipe": "phpnomad/option-provider", "relationship": "elevator-up-add-typed-accessor"},
+        {"recipe": "phpnomad/setting", "relationship": "full-stack-composite"},
+        {"recipe": "phpnomad/listener", "relationship": "general-form-of-this-pattern"}
+    ],
+    "outputs": [
+        "A {name} class implementing CanHandle that registers the option on Ready",
+        "A getListeners() entry mapping Ready to {name}"
+    ],
+    "postApply": [
+        "Edit defaultValue() to return the actual default",
+        "Verify with `wp option get {optionName}` (WP-CLI)"
+    ],
+    "vars": {
+        "name": {
+            "type": "string",
+            "description": "Class name for the registrar (PascalCase, no suffix)",
+            "example": "AcmeSettings",
+            "aiHint": "PascalCase. Convention: name after the option's purpose (AcmeSettings, FeatureFlags), not Register{Name}."
+        },
+        "optionName": {
+            "type": "string",
+            "description": "WordPress option key",
+            "example": "acme_settings",
+            "aiHint": "snake_case, plugin-prefixed (acme_settings, not settings) to avoid collisions in wp_options."
+        },
+        "initializer": {
+            "type": "string",
+            "description": "FQCN of the initializer to register the listener in",
+            "example": "AcmeBilling\\AppInit"
+        }
+    },
+    "requires": [],
+    "files": [
+        {
+            "path": "lib/Options/{{name}}.php",
+            "template": "wp-option-registrar"
+        }
+    ],
+    "registrations": [
+        {
+            "initializer": "{{initializer}}",
+            "method": "getListeners",
+            "interface": "PHPNomad\\Events\\Interfaces\\HasListeners",
+            "type": "map",
+            "key": "PHPNomad\\Core\\Events\\Ready",
+            "value": "{{namespace}}\\{{name}}"
+        }
+    ]
+}

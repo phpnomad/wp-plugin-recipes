@@ -1,0 +1,84 @@
+{
+    "name": "role",
+    "kind": "scaffolding",
+    "stability": "experimental",
+    "summary": "Add a WordPress user role on Ready (idempotent).",
+    "description": "Scaffolds a Ready listener that calls add_role() if the role does not already exist. Roles persist in wp_options once added.",
+    "problem": "You need a custom user role with specific capabilities — and you don't want to hand-edit add_role() calls scattered across activation hooks.",
+    "appliesWhen": [
+        "You need a single named role with a known set of capabilities",
+        "Idempotent runtime registration is acceptable (vs activation-only)"
+    ],
+    "avoidWhen": [
+        "You only need to add capabilities to an existing role (modify $role->add_cap() instead)",
+        "You need a per-environment role set with versioning (build a small migration system)",
+        "The role membership is dynamic per-user (look at WordPress capabilities/filters instead)"
+    ],
+    "synonyms": {
+        "general": ["user role", "permission group", "actor type"],
+        "wordpress": ["role", "add_role", "user role"]
+    },
+    "examples": [
+        "Add an acme_collaborator role for the integration",
+        "Register a billing_admin role with billing-specific capabilities"
+    ],
+    "tags": ["wordpress", "role", "capabilities", "auth"],
+    "tradeoffs": "One class plus a listener registration. Runs every Ready dispatch but is idempotent (skipped when the role exists). Removing capabilities later requires a separate migration class.",
+    "relatedPatterns": [
+        {"recipe": "phpnomad/listener", "relationship": "general-form-of-this-pattern"}
+    ],
+    "outputs": [
+        "A {name} class implementing CanHandle that adds the role on Ready",
+        "A getListeners() entry mapping Ready to {name}"
+    ],
+    "postApply": [
+        "Edit capabilities() to grant the actual capabilities the role needs",
+        "Verify with `wp role list` (WP-CLI)"
+    ],
+    "vars": {
+        "name": {
+            "type": "string",
+            "description": "Class name (PascalCase, no suffix)",
+            "example": "Collaborator",
+            "aiHint": "PascalCase. Convention: name after the role concept (Collaborator, BillingAdmin)."
+        },
+        "roleSlug": {
+            "type": "string",
+            "description": "WordPress role slug (lowercase, underscore-separated)",
+            "example": "acme_collaborator",
+            "aiHint": "snake_case, plugin-prefixed to avoid collisions."
+        },
+        "roleLabel": {
+            "type": "string",
+            "description": "Display name shown in admin UI",
+            "example": "Collaborator"
+        },
+        "textDomain": {
+            "type": "string",
+            "description": "Plugin text domain",
+            "example": "acme-billing"
+        },
+        "initializer": {
+            "type": "string",
+            "description": "FQCN of the initializer to register the listener in",
+            "example": "AcmeBilling\\AppInit"
+        }
+    },
+    "requires": [],
+    "files": [
+        {
+            "path": "lib/Roles/{{name}}.php",
+            "template": "wp-role-registrar"
+        }
+    ],
+    "registrations": [
+        {
+            "initializer": "{{initializer}}",
+            "method": "getListeners",
+            "interface": "PHPNomad\\Events\\Interfaces\\HasListeners",
+            "type": "map",
+            "key": "PHPNomad\\Core\\Events\\Ready",
+            "value": "{{namespace}}\\{{name}}"
+        }
+    ]
+}

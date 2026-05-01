@@ -1,0 +1,83 @@
+{
+    "name": "cron-job",
+    "kind": "scaffolding",
+    "stability": "experimental",
+    "summary": "Schedule and handle a recurring WP-Cron job via a Ready event listener.",
+    "description": "Scaffolds a Ready listener that schedules a recurring WP-Cron event (if not already scheduled) and registers the action handler that runs when the cron fires.",
+    "problem": "You need recurring background work (cleanup, sync, periodic refresh) without managing the schedule by hand or duplicating cron registration across activation hooks.",
+    "appliesWhen": [
+        "You need scheduled work running on a recurring interval",
+        "Approximate timing is OK (WP-Cron fires only when the site receives traffic, or via a real cron hitting wp-cron.php)",
+        "The job is short — anything long should dispatch into PHPNomad tasks"
+    ],
+    "avoidWhen": [
+        "You need precise, missed-execution-aware scheduling (use a real job queue)",
+        "The job is one-time (wp_schedule_single_event is closer)",
+        "The job is too heavy for one request (use phpnomad/task to break it up)"
+    ],
+    "synonyms": {
+        "general": ["scheduled job", "cron task", "periodic task"],
+        "wordpress": ["WP-Cron", "wp_schedule_event", "cron job"]
+    },
+    "examples": [
+        "Run a daily cleanup job",
+        "Sync external data hourly"
+    ],
+    "tags": ["wordpress", "cron", "background-job"],
+    "tradeoffs": "One class plus a listener registration. Schedule registration is idempotent (skipped when already scheduled). For unscheduling, add wp_clear_scheduled_hook(self::HOOK) to a deactivation hook.",
+    "relatedPatterns": [
+        {"recipe": "phpnomad/task", "relationship": "for-heavy-work-dispatched-from-here"},
+        {"recipe": "phpnomad/listener", "relationship": "general-form-of-this-pattern"}
+    ],
+    "outputs": [
+        "A {name} class implementing CanHandle that schedules and handles the cron",
+        "A getListeners() entry mapping Ready to {name}"
+    ],
+    "postApply": [
+        "Implement run() with the actual work",
+        "Add wp_clear_scheduled_hook in a deactivation hook to clean up on uninstall",
+        "If recurrence is custom, register the schedule via the cron_schedules filter"
+    ],
+    "vars": {
+        "name": {
+            "type": "string",
+            "description": "Class name (PascalCase)",
+            "example": "DailyCleanupJob",
+            "aiHint": "PascalCase. Suffix with Job for clarity."
+        },
+        "hook": {
+            "type": "string",
+            "description": "WP-Cron hook name",
+            "example": "acme_daily_cleanup",
+            "aiHint": "snake_case, plugin-prefixed."
+        },
+        "recurrence": {
+            "type": "string",
+            "description": "Schedule recurrence",
+            "example": "daily",
+            "aiHint": "Built-in: hourly, twicedaily, daily, weekly. Custom recurrences require registering via the cron_schedules filter."
+        },
+        "initializer": {
+            "type": "string",
+            "description": "FQCN of the initializer",
+            "example": "AcmeBilling\\AppInit"
+        }
+    },
+    "requires": [],
+    "files": [
+        {
+            "path": "lib/Cron/{{name}}.php",
+            "template": "wp-cron-job"
+        }
+    ],
+    "registrations": [
+        {
+            "initializer": "{{initializer}}",
+            "method": "getListeners",
+            "interface": "PHPNomad\\Events\\Interfaces\\HasListeners",
+            "type": "map",
+            "key": "PHPNomad\\Core\\Events\\Ready",
+            "value": "{{namespace}}\\{{name}}"
+        }
+    ]
+}

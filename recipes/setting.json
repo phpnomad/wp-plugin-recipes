@@ -1,0 +1,80 @@
+{
+    "name": "setting",
+    "kind": "composite",
+    "stability": "experimental",
+    "summary": "Full WordPress setting stack: registers the option with a default and provides a typed accessor.",
+    "description": "Composite that scaffolds both the option registrar (default value applied on Ready) and a typed provider service for read/write. The provider is autowired via the DI container.",
+    "problem": "You're introducing a new WordPress option and you want both the registration (with a default) and a typed accessor in one shot.",
+    "appliesWhen": [
+        "You're starting fresh on a new option",
+        "You want both the default-value registrar and a typed accessor",
+        "Consumers should depend on a service rather than calling get_option directly"
+    ],
+    "avoidWhen": [
+        "The option already exists — use phpnomad/option-provider only",
+        "You only need defaults, no accessor — use phpnomad/option only"
+    ],
+    "synonyms": {
+        "general": ["setting", "configuration", "option stack"],
+        "wordpress": ["setting", "option with provider"]
+    },
+    "examples": [
+        "Set up the acme_settings option with defaults and a provider",
+        "Bootstrap a feature flags setting"
+    ],
+    "tags": ["wordpress", "option", "config", "composite"],
+    "tradeoffs": "Two classes plus a Ready listener registration. If your option needs Settings API integration (register_setting for REST exposure), edit the registrar after scaffolding to add it.",
+    "relatedPatterns": [
+        {"recipe": "phpnomad/option", "relationship": "child-recipe"},
+        {"recipe": "phpnomad/option-provider", "relationship": "child-recipe"}
+    ],
+    "outputs": [
+        "A {name} option registrar at lib/Options/{name}.php",
+        "A {name}Provider accessor at lib/Options/{name}Provider.php",
+        "A getListeners() entry registering the registrar on Ready"
+    ],
+    "postApply": [
+        "Edit defaultValue() in both classes to return the actual default",
+        "Add typed methods on the provider as your usage solidifies",
+        "If you need Settings API integration, add register_setting() inside the registrar's handle() method"
+    ],
+    "vars": {
+        "name": {
+            "type": "string",
+            "description": "Class name shared between the registrar and the provider (PascalCase, no suffix)",
+            "example": "AcmeSettings",
+            "aiHint": "PascalCase. The provider class will be named {name}Provider."
+        },
+        "optionName": {
+            "type": "string",
+            "description": "WordPress option key",
+            "example": "acme_settings",
+            "aiHint": "snake_case, plugin-prefixed."
+        },
+        "initializer": {
+            "type": "string",
+            "description": "FQCN of the initializer to register the listener in",
+            "example": "AcmeBilling\\AppInit"
+        }
+    },
+    "requires": [],
+    "files": [],
+    "registrations": [],
+    "recipes": [
+        {
+            "recipe": "phpnomad/option",
+            "vars": {
+                "name": "{{name}}",
+                "optionName": "{{optionName}}",
+                "initializer": "{{initializer}}"
+            }
+        },
+        {
+            "recipe": "phpnomad/option-provider",
+            "vars": {
+                "name": "{{name}}Provider",
+                "optionName": "{{optionName}}"
+            }
+        }
+    ]
+}
