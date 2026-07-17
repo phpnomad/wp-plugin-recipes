@@ -2,7 +2,7 @@
     "name": "cpt-datastore",
     "kind": "composite",
     "stability": "experimental",
-    "summary": "Full CPT-backed entity stack: model, adapter, datastore, registrar, and WordPress-backed handler in one shot.",
+    "summary": "Full CPT-backed entity stack: model, adapter, datastore, registrar, and handler in one shot.",
     "description": "Creates a complete WordPress-backed datastore stack: model, model adapter, datastore (interface + handler interface + implementation), the post type registrar, and a CPT-backed handler that translates the typed datastore into wp_insert_post / WP_Query / wp_update_post / wp_delete_post calls.",
     "problem": "You're starting a new entity that lives in WordPress posts and you want the entire idiomatic PHPNomad stack scaffolded in one shot — typed model, registered post type, datastore interface and implementation, and the CPT-backed handler that ties them together — without copying boilerplate from another plugin.",
     "appliesWhen": [

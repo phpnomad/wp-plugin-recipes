@@ -2,7 +2,7 @@
     "name": "cpt-handler",
     "kind": "scaffolding",
     "stability": "experimental",
-    "summary": "WordPress-CPT-backed implementation of a datastore handler, plus a registrar for the post type itself.",
+    "summary": "CPT-backed implementation of a datastore handler, plus a registrar for the post type itself.",
     "description": "Creates a datastore handler that translates a typed PHPNomad datastore interface into WordPress CRUD (wp_insert_post, get_post, WP_Query, wp_update_post, wp_delete_post). Composes phpnomad/cpt so the post type is registered alongside the handler.",
     "problem": "You already have a PHPNomad datastore (and its handler interface) and you want WordPress to be the actual backing storage — posts hold the records, post meta holds the extra fields — without writing the WP_Query/post-meta plumbing by hand.",
     "appliesWhen": [
