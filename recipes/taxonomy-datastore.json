@@ -2,7 +2,7 @@
     "name": "taxonomy-datastore",
     "kind": "composite",
     "stability": "experimental",
-    "summary": "Full taxonomy-backed entity stack: model, adapter, datastore, registrar, and term-backed handler in one shot.",
+    "summary": "Full taxonomy-backed entity stack: model, adapter, datastore, registrar, and handler in one shot.",
     "description": "Creates a complete WordPress-backed datastore stack for a taxonomy: model, model adapter, datastore (interface + handler interface + implementation), the taxonomy registrar, and a term-backed handler that translates the typed datastore into wp_insert_term / WP_Term_Query / wp_update_term / wp_delete_term calls.",
     "problem": "You're starting a new entity that lives as WordPress terms and you want the entire idiomatic PHPNomad stack scaffolded in one shot, without copying boilerplate from another plugin.",
     "appliesWhen": [

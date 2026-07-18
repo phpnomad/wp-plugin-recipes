@@ -2,7 +2,7 @@
     "name": "taxonomy-handler",
     "kind": "scaffolding",
     "stability": "experimental",
-    "summary": "WordPress-taxonomy-backed implementation of a datastore handler, plus a registrar for the taxonomy itself.",
+    "summary": "Taxonomy-backed implementation of a datastore handler, plus a registrar for the taxonomy itself.",
     "description": "Creates a datastore handler that translates a typed PHPNomad datastore interface into WordPress term CRUD (wp_insert_term, get_term, WP_Term_Query, wp_update_term, wp_delete_term). Composes phpnomad/taxonomy so the taxonomy is registered alongside the handler.",
     "problem": "You already have a PHPNomad datastore (and its handler interface) and you want WordPress terms to be the actual backing storage — terms hold the records, term meta holds the extra fields — without writing the WP_Term_Query/term-meta plumbing by hand.",
     "appliesWhen": [
